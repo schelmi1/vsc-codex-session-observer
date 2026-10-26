@@ -7,7 +7,7 @@ token use, and tasks that need attention.
 
 ## Install
 
-1. Download the `.vsix` from [GitHub Releases](https://github.com/schelmi1/codex-session-observer/releases).
+1. Download the `.vsix` from [GitHub Releases](https://github.com/schelmi1/vsc-codex-session-observer/releases).
 2. In VS Code, run **Extensions: Install from VSIX…** and select the download.
 3. Reload VS Code if prompted.
 
@@ -58,7 +58,7 @@ also adjust when quiet work moves to history with
 
 ## Help and contributing
 
-Report a problem with the [issue forms](https://github.com/schelmi1/codex-session-observer/issues/new/choose),
+Report a problem with the [issue forms](https://github.com/schelmi1/vsc-codex-session-observer/issues/new/choose),
 read [known issues](docs/KNOWN_ISSUES.md), or see [CONTRIBUTING.md](CONTRIBUTING.md)
 and [SECURITY.md](SECURITY.md).
 

@@ -7,10 +7,10 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/schelmi1/codex-session-observer.git"
+    "url": "https://github.com/schelmi1/vsc-codex-session-observer.git"
   },
   "bugs": {
-    "url": "https://github.com/schelmi1/codex-session-observer/issues"
+    "url": "https://github.com/schelmi1/vsc-codex-session-observer/issues"
   },
   "engines": {
     "vscode": "^1.96.0"
