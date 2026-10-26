@@ -1,0 +1,89 @@
+name: Validate and release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Tests and VSIX
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    env:
+      CHROME_BIN: google-chrome
+      AGENTOBS_SCREENSHOT_DIR: /tmp/agentobs-ui-screenshots
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Validate release version
+        id: version
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const { version } = require('./package.json');
+          if (process.env.GITHUB_REF_TYPE === 'tag' && process.env.GITHUB_REF_NAME !== 'v' + version) {
+            throw new Error('Release tag must match package.json version: v' + version);
+          }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + version + '\n');
+          NODE
+      - name: Unit and lifecycle tests
+        run: npm test
+      - name: Browser checks
+        run: npm run test:ui
+      - name: Package extension
+        run: npm run package
+      - name: Save VSIX
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: vsix-${{ steps.version.outputs.version }}
+          path: codex-session-observer-*.vsix
+          if-no-files-found: error
+          retention-days: 14
+      - name: Save UI screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ui-screenshots
+          path: ${{ env.AGENTOBS_SCREENSHOT_DIR }}/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    name: GitHub release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: vsix-${{ needs.checks.outputs.version }}
+          path: dist
+      - name: Attach VSIX to GitHub release
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/*.vsix --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/*.vsix --verify-tag --title "$RELEASE_TAG" --generate-notes
+          fi

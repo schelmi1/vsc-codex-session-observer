@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Generated extension packages
+*.vsix
+
+# Build and test output
+dist/
+out/
+coverage/
+
+# Logs
+*.log
+
+# Local credentials and runtime state
+.env
+.env.*
+!.env.example
+.aws/
+.codex/
+ARCHITECTURE.md
+.github/REPOSITORY_SETTINGS.md
+
+# Local transcript exports
+/sessions/
+/transcripts/
+
+# Operating-system files
+.DS_Store
+Thumbs.db

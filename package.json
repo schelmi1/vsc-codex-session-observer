@@ -1,0 +1,123 @@
+{
+  "name": "codex-session-observer",
+  "displayName": "Codex Session Observer",
+  "description": "A local, read-only observer for Codex session transcripts.",
+  "version": "0.1.85",
+  "publisher": "local",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/schelmi1/codex-session-observer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/schelmi1/codex-session-observer/issues"
+  },
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:codexSessionObserver.sessions"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codexSessionObserver",
+          "title": "Codex Observer",
+          "icon": "media/codex.svg"
+        }
+      ]
+    },
+    "views": {
+      "codexSessionObserver": [
+        {
+          "id": "codexSessionObserver.sessions",
+          "name": "Sessions"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codexSessionObserver.refresh",
+        "title": "Codex Observer: Refresh Sessions",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "codexSessionObserver.openLiveMap",
+        "title": "Codex Observer: Open Live Agent Map",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "codexSessionObserver.openAgentHistory",
+        "title": "Codex Observer: Open Agent History"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codexSessionObserver.refresh",
+          "when": "view == codexSessionObserver.sessions",
+          "group": "navigation"
+        },
+        {
+          "command": "codexSessionObserver.openLiveMap",
+          "when": "view == codexSessionObserver.sessions",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "codexSessionObserver.openAgentHistory",
+          "when": "view == codexSessionObserver.sessions && viewItem == codexSession",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Codex Session Observer",
+      "properties": {
+        "codexSessionObserver.showOtherWorkspaces": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show sessions whose recorded working directory is outside the open workspace."
+        },
+        "codexSessionObserver.showUnsupported": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show transcripts whose Codex format cannot be parsed. Disabled by default."
+        },
+        "codexSessionObserver.pollIntervalMs": {
+          "type": "number",
+          "default": 2000,
+          "minimum": 500,
+          "description": "How often local Codex session files are rescanned."
+        },
+        "codexSessionObserver.inactiveAfterMs": {
+          "type": "number",
+          "default": 3600000,
+          "minimum": 60000,
+          "description": "Move failed, interrupted, quiet, and unconfirmed agents to inactive history after this long without transcript activity (1 hour by default)."
+        },
+        "codexSessionObserver.staleAfterMs": {
+          "type": "number",
+          "default": 900000,
+          "minimum": 10000,
+          "description": "Mark an unfinished transcript inactive after this long without a new record (15 minutes by default)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "scan:secrets": "node scripts/scan-secrets.js",
+    "test": "node --test test/*.test.js",
+    "test:ui": "node test/live-map.browser.js",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.2.1"
+  }
+}
