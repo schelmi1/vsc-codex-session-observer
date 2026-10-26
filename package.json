@@ -2,7 +2,7 @@
   "name": "codex-session-observer",
   "displayName": "Codex Session Observer",
   "description": "A local, read-only observer for Codex session transcripts.",
-  "version": "0.1.85",
+  "version": "0.1.86",
   "publisher": "local",
   "private": true,
   "repository": {

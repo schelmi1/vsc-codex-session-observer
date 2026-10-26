@@ -369,6 +369,29 @@ test('allows normal quiet gaps before the default stalled timeout', () => {
   }
 });
 
+test('keeps a just-completed run live for five seconds so parallel runs do not jump', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-observer-completion-grace-'));
+  const write = (name, records) => fs.writeFileSync(path.join(root, `rollout-${name}.jsonl`), records.map(record => JSON.stringify(record)).join('\n'));
+  const completed = { type: 'event_msg', timestamp: '2026-10-24T10:00:01Z', payload: { type: 'task_complete' } };
+  const stillWorking = { type: 'event_msg', timestamp: '2026-10-24T10:00:00.500Z', payload: { type: 'task_started' } };
+  try {
+    write('just-completed', [{ ...meta, payload: { ...meta.payload, session_id: 'just-completed' } }, { type: 'event_msg', timestamp: meta.timestamp, payload: { type: 'task_started' } }, completed]);
+    write('still-working', [{ ...meta, payload: { ...meta.payload, session_id: 'still-working' } }, stillWorking]);
+
+    const duringGrace = loadSessions(root, undefined, Date.parse('2026-10-24T10:00:05.999Z'));
+    assert.deepEqual(buildSessionForest(duringGrace).map(node => node.session.id), ['just-completed', 'still-working']);
+    const pending = liveMapModel(buildSessionForest(duringGrace)).forest[0];
+    assert.equal(pending.status, 'active');
+    assert.equal(pending.phaseLabel, 'Waiting for next heartbeat');
+
+    const afterGrace = loadSessions(root, undefined, Date.parse('2026-10-24T10:00:06Z'));
+    assert.deepEqual(buildSessionForest(afterGrace).map(node => node.session.id), ['still-working', 'just-completed']);
+    assert.equal(afterGrace.find(session => session.id === 'just-completed').status, 'completed');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('a stale descendant does not keep a completed parent delegating', () => {
   const tree = buildSessionForest([{ id: 'root', status: 'completed', spawnedAgentPaths: ['/root/child'] }, { id: 'root', agentPath: '/root/child', status: 'stale' }]);
   assert.equal(tree[0].session.status, 'completed');
